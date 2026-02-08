@@ -62,10 +62,6 @@ exports.sendMessage = async (req, res, next) => {
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
 
-    // CORS headers
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-
     // Convert messages format for conversationHistory
     const conversationHistory = messages.slice(0, -1).map((msg) => {
       let msgContent;
