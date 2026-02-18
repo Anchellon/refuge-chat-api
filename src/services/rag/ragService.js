@@ -1,23 +1,15 @@
-const { ChatOllama, OllamaEmbeddings } = require("@langchain/ollama");
+const { OllamaEmbeddings } = require("@langchain/ollama");
 const { Chroma } = require("@langchain/community/vectorstores/chroma");
 const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
 const { HumanMessage, AIMessage } = require("@langchain/core/messages");
+const { createLLM } = require("../llm/llmFactory");
 const logger = require("../../config/logger");
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3";
-const OLLAMA_EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text";
-const CHROMA_URL = process.env.CHROMA_URL || "http://localhost:8000";
-const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION || "pdf-documents";
-
-const llm = new ChatOllama({
-  baseUrl: OLLAMA_BASE_URL,
-  model: OLLAMA_MODEL,
-});
-
+// Embeddings are fixed to Ollama/nomic-embed-text — must match the ingestion pipeline.
+// Changing this requires re-ingesting documents with the new embedding model.
 const embeddings = new OllamaEmbeddings({
-  baseUrl: OLLAMA_BASE_URL,
-  model: OLLAMA_EMBEDDING_MODEL,
+  baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+  model: process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text",
 });
 
 const prompt = ChatPromptTemplate.fromMessages([
@@ -36,17 +28,19 @@ let vectorStore = null;
 
 async function getVectorStore() {
   if (!vectorStore) {
-    logger.info(`Connecting to ChromaDB at ${CHROMA_URL}, collection: ${CHROMA_COLLECTION}`);
+    const chromaUrl = process.env.CHROMA_URL || "http://localhost:8000";
+    const chromaCollection = process.env.CHROMA_COLLECTION || "pdf-documents";
+    logger.info(`Connecting to ChromaDB at ${chromaUrl}, collection: ${chromaCollection}`);
     vectorStore = await Chroma.fromExistingCollection(embeddings, {
-      collectionName: CHROMA_COLLECTION,
-      url: CHROMA_URL,
+      collectionName: chromaCollection,
+      url: chromaUrl,
     });
     logger.info("ChromaDB vector store initialized");
   }
   return vectorStore;
 }
 
-async function streamRagResponse(question, chatHistory, onChunk) {
+async function streamRagResponse(question, chatHistory, provider, onChunk) {
   const store = await getVectorStore();
   const retriever = store.asRetriever({ k: 4 });
 
@@ -60,6 +54,7 @@ async function streamRagResponse(question, chatHistory, onChunk) {
     msg.role === "user" ? new HumanMessage(msg.content) : new AIMessage(msg.content)
   );
 
+  const llm = createLLM(provider);
   const chain = prompt.pipe(llm);
   const stream = await chain.stream({
     context,

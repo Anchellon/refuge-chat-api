@@ -1,0 +1,1 @@
+//  you have Conversation.js and Message.js models sitting there, which means this was originally planned for saving conversations to a database. If you want chat history to persist across sessions, you'll need this. If you're happy with history only living in the frontend and being sent on each request (which is what you do now), delete it.

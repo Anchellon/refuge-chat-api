@@ -1,0 +1,1 @@
+// chatService.js — depends. Right now the controller calls ragService directly, which is fine. You'd need this if you wanted a layer that orchestrates things like saving messages to DB, rate limiting per user, injecting user-specific context, etc. If you plan to persist chat history, you'll need it eventually. Otherwise delete it.

@@ -1,5 +1,4 @@
 const { streamRagResponse } = require("../services/rag/ragService");
-const ollamaService = require("../services/llm/ollamaService"); // kept for healthCheck and listModels
 const logger = require("../config/logger");
 
 // Simple ID generator
@@ -15,7 +14,7 @@ exports.sendMessage = async (req, res, next) => {
     console.log("=== CHAT REQUEST RECEIVED ===");
     console.log("Request body:", JSON.stringify(req.body, null, 2));
 
-    const { messages } = req.body;
+    const { messages, provider = "ollama" } = req.body;
 
     // Validate input
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -99,7 +98,7 @@ exports.sendMessage = async (req, res, next) => {
     let chunkCount = 0;
     let totalLength = 0;
 
-    await streamRagResponse(content, conversationHistory, (chunk) => {
+    await streamRagResponse(content, conversationHistory, provider, (chunk) => {
       chunkCount++;
       totalLength += chunk.length;
 
@@ -167,38 +166,3 @@ exports.sendMessage = async (req, res, next) => {
   }
 };
 
-/**
- * Check Ollama health
- */
-exports.healthCheck = async (req, res, next) => {
-  try {
-    const isHealthy = await ollamaService.healthCheck();
-
-    res.json({
-      success: true,
-      ollama: {
-        available: isHealthy,
-        baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-        model: process.env.OLLAMA_MODEL || "llama2",
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * List available models
- */
-exports.listModels = async (req, res, next) => {
-  try {
-    const models = await ollamaService.listModels();
-
-    res.json({
-      success: true,
-      data: { models },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
