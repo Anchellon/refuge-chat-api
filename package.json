@@ -37,11 +37,16 @@
   "homepage": "https://github.com/Anchellon/refuge-chat-api#readme",
   "description": "Chat API with Ollama integration",
   "dependencies": {
+    "@langchain/community": "^1.1.16",
+    "@langchain/core": "^1.1.26",
+    "@langchain/ollama": "^1.2.3",
     "axios": "^1.13.4",
+    "chromadb": "^3.3.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "knex": "^3.1.0",
+    "langchain": "^1.2.25",
     "pdfjs-dist": "^5.4.624",
     "pg": "^8.18.0"
   },

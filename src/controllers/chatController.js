@@ -1,4 +1,5 @@
-const ollamaService = require("../services/llm/ollamaService");
+const { streamRagResponse } = require("../services/rag/ragService");
+const ollamaService = require("../services/llm/ollamaService"); // kept for healthCheck and listModels
 const logger = require("../config/logger");
 
 // Simple ID generator
@@ -93,12 +94,12 @@ exports.sendMessage = async (req, res, next) => {
       `data: ${JSON.stringify({ type: "text-start", id: messageId })}\n\n`,
     );
 
-    // Stream from Ollama
-    console.log("🌊 Starting stream from Ollama...");
+    // Stream RAG response
+    console.log("🌊 Starting RAG stream...");
     let chunkCount = 0;
     let totalLength = 0;
 
-    await ollamaService.chatStream(content, conversationHistory, (chunk) => {
+    await streamRagResponse(content, conversationHistory, (chunk) => {
       chunkCount++;
       totalLength += chunk.length;
 
