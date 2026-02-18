@@ -1,4 +1,5 @@
 const ollamaService = require("../services/llm/ollamaService");
+const ragService = require("../services/rag/ragService");
 const logger = require("../config/logger");
 
 // Simple ID generator
@@ -93,6 +94,15 @@ exports.sendMessage = async (req, res, next) => {
       `data: ${JSON.stringify({ type: "text-start", id: messageId })}\n\n`,
     );
 
+    // Fetch RAG context from ChromaDB
+    console.log("🔍 Fetching RAG context...");
+    const systemPrompt = await ragService.getContext(content);
+    if (systemPrompt) {
+      console.log("✅ RAG context injected into system prompt");
+    } else {
+      console.log("⚠️ No RAG context available, proceeding without it");
+    }
+
     // Stream from Ollama
     console.log("🌊 Starting stream from Ollama...");
     let chunkCount = 0;
@@ -117,7 +127,7 @@ exports.sendMessage = async (req, res, next) => {
       };
 
       res.write(`data: ${JSON.stringify(data)}\n\n`);
-    });
+    }, systemPrompt);
 
     console.log(
       `✅ Stream complete! Total chunks: ${chunkCount}, Total length: ${totalLength}`,

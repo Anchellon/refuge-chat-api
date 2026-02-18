@@ -66,9 +66,10 @@ class OllamaService {
    * @param {Function} onChunk - Callback function called for each chunk
    * @returns {Promise<void>}
    */
-  async chatStream(message, conversationHistory = [], onChunk) {
+  async chatStream(message, conversationHistory = [], onChunk, systemPrompt) {
     try {
       const messages = [
+        ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
         ...conversationHistory,
         {
           role: "user",
