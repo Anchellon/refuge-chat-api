@@ -1,8 +1,8 @@
 const { OllamaEmbeddings } = require("@langchain/ollama");
-const { Chroma } = require("@langchain/community/vectorstores/chroma");
 const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
 const { HumanMessage, AIMessage } = require("@langchain/core/messages");
 const { createLLM } = require("../llm/llmFactory");
+const { getVectorStore } = require("./vectorStoreFactory");
 const logger = require("../../config/logger");
 
 // Embeddings are fixed to Ollama/nomic-embed-text — must match the ingestion pipeline.
@@ -24,24 +24,8 @@ Context:
   ["human", "{question}"],
 ]);
 
-let vectorStore = null;
-
-async function getVectorStore() {
-  if (!vectorStore) {
-    const chromaUrl = process.env.CHROMA_URL || "http://localhost:8000";
-    const chromaCollection = process.env.CHROMA_COLLECTION || "pdf-documents";
-    logger.info(`Connecting to ChromaDB at ${chromaUrl}, collection: ${chromaCollection}`);
-    vectorStore = await Chroma.fromExistingCollection(embeddings, {
-      collectionName: chromaCollection,
-      url: chromaUrl,
-    });
-    logger.info("ChromaDB vector store initialized");
-  }
-  return vectorStore;
-}
-
 async function streamRagResponse(question, chatHistory, provider, onChunk) {
-  const store = await getVectorStore();
+  const store = await getVectorStore(embeddings);
   const retriever = store.asRetriever({ k: 4 });
 
   logger.info(`Retrieving documents for: "${question.substring(0, 50)}..."`);
