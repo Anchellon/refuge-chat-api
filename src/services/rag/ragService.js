@@ -1,5 +1,8 @@
 const { OllamaEmbeddings } = require("@langchain/ollama");
-const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
+const {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} = require("@langchain/core/prompts");
 const { HumanMessage, AIMessage } = require("@langchain/core/messages");
 const { createLLM } = require("../llm/llmFactory");
 const { getVectorStore } = require("./vectorStoreFactory");
@@ -35,7 +38,9 @@ async function streamRagResponse(question, chatHistory, provider, onChunk) {
   const context = docs.map((d) => d.pageContent).join("\n\n---\n\n");
 
   const messages = chatHistory.map((msg) =>
-    msg.role === "user" ? new HumanMessage(msg.content) : new AIMessage(msg.content)
+    msg.role === "user"
+      ? new HumanMessage(msg.content)
+      : new AIMessage(msg.content),
   );
 
   const llm = createLLM(provider);
